@@ -5,10 +5,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-class get_js_page(url, username=None, password=None, target_elem='')
+
+def page_login(url, username=None, password=None):
     browser = webdriver.Firefox()
     browser.get(url)
-    
     # simulate bahavior on page
     user_elem = browser.find_element_by_id("username")
     pass_elem = browser.find_element_by_id("password")
@@ -16,13 +16,29 @@ class get_js_page(url, username=None, password=None, target_elem='')
     pass_elem.send_keys(password)
     browser.find_element_by_name("submit").click()
 
-    # get the soup cook
-    delay = 3
-    WebDriverWait(browser, delay).until(EC.presence_of_element_located((By.ID, target_elem)))
-    bsObj = BeautifulSoup(browser.page_source)
+    return browser
 
+def render_and_get(browser, target_elem_id='', delay=3):
+    # get the soup cook
+    WebDriverWait(browser, delay).until(EC.presence_of_element_located((By.ID, target_elem_id)))
+    bsObj = BeautifulSoup(browser.page_source, "html.parser")
     return bsObj
     
-def utils(bsObj):
-    pass
+def get_all_zip(bsObj):
+    links = []
+    for atag in bsObj.findAll('a'):
+        link = atag.get('href')
+        if link and '.zip' in link:
+            links.append(link)
+    return links
 
+if __name__ == "__main__":
+    url = '' 
+    browser = webdriver.PhantomJS(executable_path='./phantomjs/bin/phantomjs')
+    browser.get(url)  
+    bsObj = render_and_get(browser, 'main-content') 
+    links = get_all_zip(bsObj)
+     
+    with open('data_link.txt', 'w') as f:
+        for link in links:
+            f.write(link+'\n')
